@@ -1,7 +1,9 @@
 # LanDropUi
 
 ## 项目简介
-<img width="1511" alt="image" src="https://github.com/user-attachments/assets/048f0094-eba6-467d-821e-cee2cdbf46bf" />
+<img width="1024" alt="17311749308526_ pic" src="https://github.com/user-attachments/assets/b493c286-1be1-4a39-ae7e-c5f8ba7340db" />
+<img width="1024" alt="17321749308534_ pic" src="https://github.com/user-attachments/assets/d09e06d0-1ad0-4786-9c75-5ec18f3e823c" />
+
 
 
 LanDropUi 是一个基于 Wails 框架开发的桌面应用程序，旨在提供局域网内的文件传输功能。它包含两个独立的应用程序：`receive`（接收端）和 `send`（发送端），允许用户方便快捷地在同一局域网内传输文件。
