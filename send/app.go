@@ -65,8 +65,8 @@ func (a *App) ChooseFile(lastFilePathList map[string]map[string]interface{}) map
 	return filePathList
 }
 
-func (a *App) Send(filepathList map[string]map[string]interface{}) string {
-	sendChan := make(chan struct{}, 3)
+func (a *App) Send(filepathList map[string]map[string]interface{}, sendCount int, ipAddress string) string {
+	sendChan := make(chan struct{}, sendCount)
 	defer close(sendChan)
 	sendErrChan := make(chan string, len(filepathList))
 	waitGroup := sync.WaitGroup{}
@@ -75,29 +75,33 @@ func (a *App) Send(filepathList map[string]map[string]interface{}) string {
 	defer cancel()
 	// 打开要传输的文件
 	for fileUUid, filePathArray := range filepathList {
-		waitGroup.Add(1)
-		go func(fp string) {
-			defer waitGroup.Done()
-			select {
-			case sendChan <- struct{}{}:
-				defer func() { <-sendChan }()
-			case <-ctx.Done():
-				return
-			}
+		//进度为0的文件才传输
+		if filePathArray["percent"].(float64) == 0 {
+			waitGroup.Add(1)
+			go func(fp string) {
+				defer waitGroup.Done()
+				select {
+				case sendChan <- struct{}{}:
+					defer func() { <-sendChan }()
+				case <-ctx.Done():
+					return
+				}
 
-			// 检查是否已被取消
-			select {
-			case <-ctx.Done():
-				return
-			default:
-			}
+				// 检查是否已被取消
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
 
-			if err := a.SendDo(fileUUid, fp); err != nil {
-				cancel()
-				sendErrChan <- err.Error()
-			}
+				if err := a.SendDo(fileUUid, fp, ipAddress); err != nil {
+					cancel()
+					sendErrChan <- err.Error()
+				}
 
-		}(filePathArray["filePath"].(string))
+			}(filePathArray["filePath"].(string))
+
+		}
 
 	}
 
@@ -118,9 +122,9 @@ func (a *App) Send(filepathList map[string]map[string]interface{}) string {
 	}
 }
 
-func (a *App) SendDo(fileUUid, filePath string) error {
+func (a *App) SendDo(fileUUid, filePath string, ipAddress string) error {
 	// 为每个文件建立新的连接
-	conn, err := net.Dial("tcp", os.Getenv("address"))
+	conn, err := net.Dial("tcp", ipAddress)
 	if err != nil {
 		return errors.New("请检查接收端是否以准备接收文件")
 	}

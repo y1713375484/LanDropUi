@@ -5,6 +5,6 @@ export function ChooseFile(arg1:{[key: string]: {[key: string]: any}}):Promise<{
 
 export function Msgalert(arg1:string):Promise<void>;
 
-export function Send(arg1:{[key: string]: {[key: string]: any}}):Promise<string>;
+export function Send(arg1:{[key: string]: {[key: string]: any}},arg2:number,arg3:string):Promise<string>;
 
-export function SendDo(arg1:string,arg2:string):Promise<void>;
+export function SendDo(arg1:string,arg2:string,arg3:string):Promise<void>;

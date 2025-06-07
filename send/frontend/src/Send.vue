@@ -6,15 +6,21 @@ import {EventsOn} from "../wailsjs/runtime/runtime.js";
 
 const filePathList = ref({});
 const isLoading = ref(false); // 新增：加载状态变量
+const sendCount = ref(1); // 新增：发送文件数量，默认为1
+const ipAddress = ref(''); // 新增：IP地址变量
 // 新增：计算属性，用于获取 filePathList 的键值长度
 const fileCount = computed(() => Object.keys(filePathList.value).length);
 //文件传输百分比
 EventsOn('percent', (data) => {
-  console.log(data)
   const fileUUid=data.fileUUID
   filePathList.value[fileUUid]["percent"]=data.percent
 });
 
+//文件传输最终
+EventsOn('percentFinsh', (data) => {
+  const fileUUid=data.fileUUID
+  filePathList.value[fileUUid]["percent"]=data.percent
+});
 
 
 function handleFileChange(){
@@ -28,9 +34,13 @@ async function sendFile(){
     Msgalert("请选择要发送的文件！")
     return;
   }
+  if (!ipAddress.value) {
+    Msgalert("请输入IP地址！")
+    return;
+  }
   isLoading.value = true; // 设置加载状态为 true
   try {
-    const res = await Send(filePathList.value); // 使用 await 等待方法执行完毕
+    const res = await Send(filePathList.value,sendCount.value, ipAddress.value); // 使用 await 等待方法执行完毕，并传递IP地址
     console.log(res)
     Msgalert(res)
   } catch (error) {
@@ -45,8 +55,16 @@ async function sendFile(){
   <div class="size-revise-container">
 
     <div class="section">
-      <div class="input-group">
+      <div class="input-group multi-line-group">
         <button class="btn primary-btn" @click="handleFileChange">选择要发送的文件</button>
+        <div class="input-with-label" style="width: 30%">
+          <span class="input-label">同时发送的文件数量</span>
+          <input type="number" v-model="sendCount" class="dimension-input small-input" min="1">
+        </div>
+        <div class="input-with-label full-width-input" style="width: 30%" >
+          <span class="input-label">目标IP地址</span>
+          <input type="text" v-model="ipAddress" class="dimension-input" placeholder="127.0.0.1:8888">
+        </div>
       </div>
       <div class="file-list-card">
         <h3>已选择文件 ({{ fileCount }})</h3>
@@ -113,6 +131,34 @@ async function sendFile(){
   margin-bottom: 1rem;
 }
 
+.input-group.multi-line-group {
+  flex-wrap: wrap; /* 允许换行 */
+  justify-content: flex-start; /* 左对齐 */
+}
+
+.input-with-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.input-with-label.full-width-input {
+  flex-grow: 1;
+  min-width: 200px; /* 确保IP输入框有最小宽度 */
+}
+
+.input-label {
+  font-size: 1rem;
+  color: #555;
+  white-space: nowrap;
+}
+
+.small-input {
+  width: 80px; /* 调整输入框宽度 */
+  text-align: center;
+  color: black;
+}
+
 .dimension-input-group {
   gap: 0.8rem;
 }
@@ -122,9 +168,10 @@ async function sendFile(){
   border: 1px solid #ccc;
   border-radius: 5px;
   font-size: 1rem;
-  width: 100%;
+  width: 100%; /* 确保输入框宽度自适应 */
   max-width: 250px;
   box-sizing: border-box;
+  color: black;
 }
 
 .dimension-input:focus {

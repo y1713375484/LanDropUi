@@ -1,10 +1,13 @@
 <script setup>
-import { Listen, Msgalert } from "../wailsjs/go/main/App.js";
+import { Listen, Msgalert,ChooseReceivePath } from "../wailsjs/go/main/App.js";
 import { EventsOn } from "../wailsjs/runtime/runtime.js";
 import {computed, ref} from "vue";
 const fileList=ref({})
 const isLoading = ref(false); // 新增：加载状态变量
+const receiveCount = ref(1); // 新增：发送文件数量，默认为1
 const fileCount = computed(() => Object.keys(fileList.value).length);
+const receivePath=ref("")//保存文件的路径
+const ipAddress = ref(''); // 新增：IP地址变量
 
 
 //文件传输百分比
@@ -23,9 +26,16 @@ EventsOn("findFileName",(data)=>{
   }
 });
 function listen() {
+
   isLoading.value=true
-  Listen().then(data=>{
+  Listen(receiveCount.value,receivePath.value,ipAddress.value).then(data=>{
     Msgalert(data)
+  })
+}
+
+function chooseReceivePath(){
+  ChooseReceivePath().then(data=>{
+    receivePath.value=data
   })
 }
 </script>
@@ -35,6 +45,17 @@ function listen() {
   <div class="size-revise-container">
 
     <div class="section">
+      <div class="input-group multi-line-group">
+          <button class="btn primary-btn" @click="chooseReceivePath">选择文件存储路径</button>
+          <div class="input-with-label" style="width: 30%">
+          <span class="input-label">同时接收的文件数量</span>
+          <input type="number" v-model="receiveCount" class="dimension-input small-input" min="1">
+        </div>
+        <div class="input-with-label full-width-input" style="width: 30%" >
+          <span class="input-label">监听IP地址</span>
+          <input type="text" v-model="ipAddress" class="dimension-input" placeholder="127.0.0.1:8888">
+        </div>
+      </div>
 
       <div class="file-list-card">
         <h3>已接收的文件 ({{ fileCount }})</h3>
@@ -101,6 +122,34 @@ function listen() {
   margin-bottom: 1rem;
 }
 
+.input-group.multi-line-group {
+  flex-wrap: wrap; /* 允许换行 */
+  justify-content: flex-start; /* 左对齐 */
+}
+
+.input-with-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.input-with-label.full-width-input {
+  flex-grow: 1;
+  min-width: 200px; /* 确保IP输入框有最小宽度 */
+}
+
+.input-label {
+  font-size: 1rem;
+  color: #555;
+  white-space: nowrap;
+}
+
+.small-input {
+  width: 80px; /* 调整输入框宽度 */
+  text-align: center;
+  color: black;
+}
+
 .dimension-input-group {
   gap: 0.8rem;
 }
@@ -110,9 +159,10 @@ function listen() {
   border: 1px solid #ccc;
   border-radius: 5px;
   font-size: 1rem;
-  width: 100%;
+  width: 100%; /* 确保输入框宽度自适应 */
   max-width: 250px;
   box-sizing: border-box;
+  color: black;
 }
 
 .dimension-input:focus {
